@@ -131,9 +131,9 @@ func TestValidatePhoneNumber(t *testing.T) {
 
 func TestValidateFirstName(t *testing.T) {
 	tests := []struct {
-		name     string
+		name      string
 		firstName string
-		expected bool
+		expected  bool
 	}{
 		{
 			name:      "valid name",

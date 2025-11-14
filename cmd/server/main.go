@@ -1,6 +1,7 @@
 package main
 
 import (
+	"context"
 	"fmt"
 	"log"
 	"log/slog"
@@ -11,12 +12,15 @@ import (
 	"syscall"
 	"time"
 
+	pb "github.com/Divyansh031/user-service/api/proto/user/v1"
 	"github.com/Divyansh031/user-service/internal/config"
 	"github.com/Divyansh031/user-service/internal/grpc/handlers"
 	"github.com/Divyansh031/user-service/internal/storage/scylla"
-	pb "github.com/Divyansh031/user-service/api/proto/user/v1"
+	
 	"google.golang.org/grpc"
+	"google.golang.org/grpc/credentials/insecure"
 	"google.golang.org/grpc/reflection"
+	"github.com/grpc-ecosystem/grpc-gateway/v2/runtime"
 )
 
 func main() {
@@ -87,21 +91,22 @@ func main() {
 
 // startRESTServer starts a simple HTTP REST server
 func startRESTServer(cfg *config.Config) {
-	mux := http.NewServeMux()
+	ctx := context.Background()
+	ctx, cancel := context.WithCancel(ctx)
+	defer cancel()
 
-	// Basic health check endpoint
-	mux.HandleFunc("/health", func(w http.ResponseWriter, r *http.Request) {
-		w.Header().Set("Content-Type", "application/json")
-		w.WriteHeader(http.StatusOK)
-		w.Write([]byte(`{"status":"ok"}`))
-	})
-
-	// REST API endpoints info
-	mux.HandleFunc("/api/info", func(w http.ResponseWriter, r *http.Request) {
-		w.Header().Set("Content-Type", "application/json")
-		w.WriteHeader(http.StatusOK)
-		w.Write([]byte(`{"message":"User Service API - Use gRPC for operations"}`))
-	})
+	// Create gRPC-Gateway mux
+	mux := runtime.NewServeMux()
+	
+	// Register gRPC-Gateway
+	grpcAddr := fmt.Sprintf("localhost:%d", cfg.GRPC.Port)
+	opts := []grpc.DialOption{grpc.WithTransportCredentials(insecure.NewCredentials())}
+	
+	err := pb.RegisterUserServiceHandlerFromEndpoint(ctx, mux, grpcAddr, opts)
+	if err != nil {
+		slog.Error("Failed to register gateway", "error", err)
+		return
+	}
 
 	httpServer := &http.Server{
 		Addr:         fmt.Sprintf(":%d", cfg.HTTP.Port),

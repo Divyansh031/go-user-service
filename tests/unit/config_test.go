@@ -45,7 +45,7 @@ func TestLoadConfigDefaults(t *testing.T) {
 
 	assert.NoError(t, err)
 	assert.NotNil(t, cfg)
-	assert.Equal(t, "development", cfg.Env)          // default
-	assert.Equal(t, 50051, cfg.GRPC.Port)            // default
-	assert.Equal(t, 8080, cfg.HTTP.Port)             // default
+	assert.Equal(t, "development", cfg.Env) // default
+	assert.Equal(t, 50051, cfg.GRPC.Port)   // default
+	assert.Equal(t, 8080, cfg.HTTP.Port)    // default
 }

@@ -13,7 +13,7 @@ help:
 proto:
 	@echo "Generating protobuf code..."
 	protoc -I. \
-		-I${GOMODCACHE}/google.golang.org/genproto/googleapis/api@v0.0.0-20250804133106-a7a43d27e69b \
+		-I$(shell go list -m -f "{{.Dir}}" google.golang.org/genproto)/googleapis \
 		-I./api/proto \
 		--go_out=. --go_opt=paths=source_relative \
 		--go-grpc_out=. --go-grpc_opt=paths=source_relative \
