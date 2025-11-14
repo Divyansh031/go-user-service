@@ -1,0 +1,17 @@
+env: "development"
+
+grpc:
+  port: 50051
+
+http:
+  port: 8080
+
+scylladb:
+  hosts:
+    - localhost
+  port: 9042
+  keyspace: userservice
+  consistency: QUORUM
+
+log:
+  level: info

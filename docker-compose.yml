@@ -1,0 +1,21 @@
+services:
+  scylla:
+    image: scylladb/scylla:5.2
+    container_name: user-service-scylla
+    ports:
+      - "9042:9042"      # CQL native transport
+      - "9160:9160"      # Thrift
+      - "10000:10000"    # REST API
+    volumes:
+      - scylla-data:/var/lib/scylla
+    command: --smp 1 --memory 1G --overprovisioned 1
+    healthcheck:
+      test: ["CMD", "cqlsh", "-e", "describe keyspaces"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+volumes:
+  scylla-data:
+
+  

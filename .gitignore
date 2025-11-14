@@ -1,0 +1,35 @@
+# Binaries
+*.exe
+*.exe~
+*.dll
+*.so
+*.dylib
+bin/
+dist/
+
+# Test artifacts
+*.test
+*.out
+coverage.*
+
+# Environment
+.env
+*.env.local
+
+# IDE
+.idea/
+.vscode/
+*.swp
+*.swo
+
+# Generated code
+*.pb.go
+*.pb.gw.go
+
+# Database
+storage/
+*.db
+
+# OS
+.DS_Store
+Thumbs.db

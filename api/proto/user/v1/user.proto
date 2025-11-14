@@ -1,0 +1,125 @@
+syntax = "proto3";
+
+package user.v1;
+
+import "google/protobuf/timestamp.proto";
+import "google/protobuf/empty.proto";
+
+option go_package = "github.com/Divyansh031/user-service/api/proto/user/v1;userv1";
+
+service UserService {
+  rpc CreateUser(CreateUserRequest) returns (CreateUserResponse) {}
+  
+  rpc GetUser(GetUserRequest) returns (GetUserResponse) {}
+  
+  rpc UpdateUser(UpdateUserRequest) returns (UpdateUserResponse) {}
+  
+  rpc DeleteUser(DeleteUserRequest) returns (google.protobuf.Empty) {}
+  
+  rpc BlockUser(BlockUserRequest) returns (BlockUserResponse) {}
+  
+  rpc UnblockUser(UnblockUserRequest) returns (UnblockUserResponse) {}
+  
+  rpc UpdateUserContact(UpdateUserContactRequest) returns (UpdateUserContactResponse) {}
+  
+  rpc GetUserByPhone(GetUserByPhoneRequest) returns (GetUserResponse) {}
+  
+  rpc GetUserByEmail(GetUserByEmailRequest) returns (GetUserResponse) {}
+  
+  rpc ListUsers(ListUsersRequest) returns (ListUsersResponse) {}
+}
+
+message User {
+  string id = 1;
+  string first_name = 2;
+  string last_name = 3;
+  string gender = 4;
+  google.protobuf.Timestamp date_of_birth = 5;
+  string phone_number = 6;
+  string email = 7;
+  bool is_blocked = 8;
+  google.protobuf.Timestamp created_at = 9;
+  google.protobuf.Timestamp updated_at = 10;
+}
+
+message CreateUserRequest {
+  string first_name = 1;
+  string last_name = 2;
+  string gender = 3;
+  google.protobuf.Timestamp date_of_birth = 4;
+  string phone_number = 5;
+  string email = 6;
+}
+
+message CreateUserResponse {
+  User user = 1;
+}
+
+message GetUserRequest {
+  string id = 1;
+}
+
+message GetUserResponse {
+  User user = 1;
+}
+
+message UpdateUserRequest {
+  string id = 1;
+  string first_name = 2;
+  string last_name = 3;
+  string gender = 4;
+  google.protobuf.Timestamp date_of_birth = 5;
+}
+
+message UpdateUserResponse {
+  User user = 1;
+}
+
+message DeleteUserRequest {
+  string id = 1;
+}
+
+message BlockUserRequest {
+  string id = 1;
+}
+
+message BlockUserResponse {
+  User user = 1;
+}
+
+message UnblockUserRequest {
+  string id = 1;
+}
+
+message UnblockUserResponse {
+  User user = 1;
+}
+
+message UpdateUserContactRequest {
+  string id = 1;
+  optional string phone_number = 2;
+  optional string email = 3;
+}
+
+message UpdateUserContactResponse {
+  User user = 1;
+}
+
+message GetUserByPhoneRequest {
+  string phone_number = 1;
+}
+
+message GetUserByEmailRequest {
+  string email = 1;
+}
+
+message ListUsersRequest {
+  int32 page_size = 1;
+  string page_token = 2;
+}
+
+message ListUsersResponse {
+  repeated User users = 1;
+  string next_page_token = 2;
+  int32 total_count = 3;
+}
