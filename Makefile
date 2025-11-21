@@ -50,11 +50,8 @@ docker-up:
 		sleep 5; \
 	done
 	@echo "ScyllaDB is ready! Applying schema..."
-	@echo "APPLYING SCHEMA WITH CLEAN INPUT..."
-	@cat scripts/schema.cql | docker exec -i user-service-scylla cqlsh -u cassandra -p cassandra
-	@echo "SUCCESS! Schema applied."
-# 	docker exec -i user-service-scylla cqlsh -u cassandra -p cassandra < scripts/schema.cql
-# 	@echo "Database schema applied successfully!"
+	docker exec -i user-service-scylla cqlsh -u cassandra -p cassandra < scripts/schema.cql
+	@echo "Database schema applied successfully!"
 
 docker-down:
 	@echo "Stopping Docker containers..."
