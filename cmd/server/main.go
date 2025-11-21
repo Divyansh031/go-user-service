@@ -62,7 +62,7 @@ func main() {
 	pb.RegisterUserServiceServer(grpcServer, userServiceServer)
 
 	// Register reflection for grpcurl
-	reflection.Register(grpcServer)
+	reflection.Register(grpcServer)  // Allows grpcurl to inspect your API
 
 	slog.Info("gRPC server listening", "port", cfg.GRPC.Port)
 
@@ -95,16 +95,25 @@ func startRESTServer(cfg *config.Config) {
 	ctx, cancel := context.WithCancel(ctx)
 	defer cancel()
 
-	// Create gRPC-Gateway mux
-	mux := runtime.NewServeMux()
-	
-	// Register gRPC-Gateway
+	// Create gRPC client connection to localhost gRPC server
 	grpcAddr := fmt.Sprintf("localhost:%d", cfg.GRPC.Port)
-	opts := []grpc.DialOption{grpc.WithTransportCredentials(insecure.NewCredentials())}
-	
-	err := pb.RegisterUserServiceHandlerFromEndpoint(ctx, mux, grpcAddr, opts)
+	conn, err := grpc.NewClient(
+		grpcAddr,
+		grpc.WithTransportCredentials(insecure.NewCredentials()),
+	)
 	if err != nil {
-		slog.Error("Failed to register gateway", "error", err)
+		slog.Error("Failed to connect to gRPC server", "error", err)
+		return
+	}
+	defer conn.Close()
+
+	// Create gateway mux
+	mux := runtime.NewServeMux()
+
+	// Register the handler using the NEW method
+	client := pb.NewUserServiceClient(conn)
+	if err := pb.RegisterUserServiceHandlerClient(ctx, mux, client); err != nil {
+		slog.Error("Failed to register gateway handler", "error", err)
 		return
 	}
 

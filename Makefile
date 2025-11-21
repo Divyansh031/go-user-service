@@ -44,10 +44,17 @@ benchmark:
 docker-up:
 	@echo "Starting Docker containers..."
 	docker-compose up -d
-	@echo "Waiting for ScyllaDB to be ready..."
-	@sleep 10
-	@echo "Applying schema..."
-	docker exec -i user-service-scylla cqlsh < scripts/schema.cql
+	@echo "Waiting for ScyllaDB to be healthy..."
+	@until docker exec user-service-scylla cqlsh -u cassandra -p cassandra -e "describe keyspaces" >/dev/null 2>&1; do \
+		echo "ScyllaDB not ready yet, waiting 5 seconds..."; \
+		sleep 5; \
+	done
+	@echo "ScyllaDB is ready! Applying schema..."
+	@echo "APPLYING SCHEMA WITH CLEAN INPUT..."
+	@cat scripts/schema.cql | docker exec -i user-service-scylla cqlsh -u cassandra -p cassandra
+	@echo "SUCCESS! Schema applied."
+# 	docker exec -i user-service-scylla cqlsh -u cassandra -p cassandra < scripts/schema.cql
+# 	@echo "Database schema applied successfully!"
 
 docker-down:
 	@echo "Stopping Docker containers..."
