@@ -8,7 +8,6 @@ import (
 
 	"github.com/Divyansh031/user-service/internal/domain"
 	"github.com/gocql/gocql"
-	"github.com/google/uuid"
 )
 
 type ScyllaDB struct {
@@ -246,9 +245,8 @@ func (db *ScyllaDB) CheckPhoneExists(ctx context.Context, phone string) (bool, e
 
 // Helper methods — now accept string userID
 func (db *ScyllaDB) insertPhoneLookup(ctx context.Context, phone string, userID string) error {
-	uid := uuid.MustParse(userID)
 	query := `INSERT INTO users_by_phone (phone_number, user_id, created_at) VALUES (?, ?, ?)`
-	return db.session.Query(query, phone, uid, time.Now()).WithContext(ctx).Exec()
+	return db.session.Query(query, phone, userID, time.Now()).WithContext(ctx).Exec()
 }
 
 func (db *ScyllaDB) deletePhoneLookup(ctx context.Context, phone string) error {
@@ -257,9 +255,8 @@ func (db *ScyllaDB) deletePhoneLookup(ctx context.Context, phone string) error {
 }
 
 func (db *ScyllaDB) insertEmailLookup(ctx context.Context, email string, userID string) error {
-	uid := uuid.MustParse(userID)
 	query := `INSERT INTO users_by_email (email, user_id, created_at) VALUES (?, ?, ?)`
-	return db.session.Query(query, email, uid, time.Now()).WithContext(ctx).Exec()
+	return db.session.Query(query, email, userID, time.Now()).WithContext(ctx).Exec()
 }
 
 func (db *ScyllaDB) deleteEmailLookup(ctx context.Context, email string) error {

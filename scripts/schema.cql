@@ -4,7 +4,7 @@ WITH replication = {'class': 'NetworkTopologyStrategy', 'replication_factor': 1}
 USE userservice;
 
 CREATE TABLE IF NOT EXISTS users (
-    id uuid PRIMARY KEY,
+    id text PRIMARY KEY,
     first_name text,
     last_name text,
     gender text,
@@ -18,13 +18,13 @@ CREATE TABLE IF NOT EXISTS users (
 
 CREATE TABLE IF NOT EXISTS users_by_phone (
     phone_number text PRIMARY KEY,
-    user_id uuid,
+    user_id text,
     created_at timestamp 
 );
 
 CREATE TABLE IF NOT EXISTS users_by_email (
     email text PRIMARY KEY,
-    user_id uuid,
+    user_id text,
     created_at timestamp 
 );
 

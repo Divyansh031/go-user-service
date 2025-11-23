@@ -87,7 +87,28 @@ func (s *UserServiceServer) UpdateUser(ctx context.Context, req *pb.UpdateUserRe
 		return nil, status.Error(codes.Internal, "failed to get user")
 	}
 
-	user.Update(req.FirstName, req.LastName, req.Gender, req.DateOfBirth.AsTime())
+	// Only update fields that are provided (non-empty)
+	firstName := req.FirstName
+	if firstName == "" {
+		firstName = user.FirstName
+	}
+
+	lastName := req.LastName
+	if lastName == "" {
+		lastName = user.LastName
+	}
+
+	gender := req.Gender
+	if gender == "" {
+		gender = user.Gender
+	}
+
+	dob := req.DateOfBirth.AsTime()
+	if dob.IsZero() {
+		dob = user.DateOfBirth
+	}
+
+	user.Update(firstName, lastName, gender, dob)
 
 	if err := user.Validate(); err != nil {
 		return nil, status.Error(codes.InvalidArgument, err.Error())
