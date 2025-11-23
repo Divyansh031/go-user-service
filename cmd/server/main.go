@@ -9,18 +9,19 @@ import (
 	"net/http"
 	"os"
 	"os/signal"
+
 	"syscall"
-	"time"
+
 
 	pb "github.com/Divyansh031/user-service/api/proto/user/v1"
 	"github.com/Divyansh031/user-service/internal/config"
 	"github.com/Divyansh031/user-service/internal/grpc/handlers"
 	"github.com/Divyansh031/user-service/internal/storage/scylla"
-	
+
+	"github.com/grpc-ecosystem/grpc-gateway/v2/runtime"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/credentials/insecure"
 	"google.golang.org/grpc/reflection"
-	"github.com/grpc-ecosystem/grpc-gateway/v2/runtime"
 )
 
 func main() {
@@ -95,10 +96,8 @@ func startRESTServer(cfg *config.Config) {
 	ctx, cancel := context.WithCancel(ctx)
 	defer cancel()
 
-	// Create gRPC client connection to localhost gRPC server
-	grpcAddr := fmt.Sprintf("localhost:%d", cfg.GRPC.Port)
 	conn, err := grpc.NewClient(
-		grpcAddr,
+		fmt.Sprintf("localhost:%d", cfg.GRPC.Port),
 		grpc.WithTransportCredentials(insecure.NewCredentials()),
 	)
 	if err != nil {
@@ -107,25 +106,27 @@ func startRESTServer(cfg *config.Config) {
 	}
 	defer conn.Close()
 
-	// Create gateway mux
-	mux := runtime.NewServeMux()
+	// Gateway mux (This expects /v1/users)
+	gwMux := runtime.NewServeMux()
 
-	// Register the handler using the NEW method
 	client := pb.NewUserServiceClient(conn)
-	if err := pb.RegisterUserServiceHandlerClient(ctx, mux, client); err != nil {
+	if err := pb.RegisterUserServiceHandlerClient(ctx, gwMux, client); err != nil {
 		slog.Error("Failed to register gateway handler", "error", err)
 		return
 	}
 
+	// NEW MUX — This will handle /api/v1/users
+	mux := http.NewServeMux()
+	mux.Handle("/api/", http.StripPrefix("/api", gwMux))
+	mux.Handle("/", gwMux) // fallback for /v1/users (if someone uses directly)
+
 	httpServer := &http.Server{
-		Addr:         fmt.Sprintf(":%d", cfg.HTTP.Port),
-		Handler:      mux,
-		ReadTimeout:  15 * time.Second,
-		WriteTimeout: 15 * time.Second,
-		IdleTimeout:  60 * time.Second,
+		Addr:    fmt.Sprintf(":%d", cfg.HTTP.Port),
+		Handler: mux,
 	}
 
 	slog.Info("HTTP REST server listening", "port", cfg.HTTP.Port)
+	slog.Info("REST API → POST http://localhost:8080/api/v1/users")
 
 	if err := httpServer.ListenAndServe(); err != nil && err != http.ErrServerClosed {
 		slog.Error("HTTP server error", "error", err)

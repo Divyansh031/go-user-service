@@ -7,7 +7,6 @@ import (
 	"github.com/Divyansh031/user-service/internal/domain"
 	"github.com/Divyansh031/user-service/internal/storage"
 	pb "github.com/Divyansh031/user-service/api/proto/user/v1"
-	"github.com/google/uuid"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
 	"google.golang.org/protobuf/types/known/emptypb"
@@ -29,7 +28,6 @@ func NewUserServiceServer(storage storage.Storage) *UserServiceServer {
 func (s *UserServiceServer) CreateUser(ctx context.Context, req *pb.CreateUserRequest) (*pb.CreateUserResponse, error) {
 	slog.Info("Creating user", "email", req.Email, "phone", req.PhoneNumber)
 
-	// Create domain user
 	user := domain.NewUser(
 		req.FirstName,
 		req.LastName,
@@ -39,13 +37,11 @@ func (s *UserServiceServer) CreateUser(ctx context.Context, req *pb.CreateUserRe
 		req.Email,
 	)
 
-	// Validate
 	if err := user.Validate(); err != nil {
 		slog.Error("Validation failed", "error", err)
 		return nil, status.Error(codes.InvalidArgument, err.Error())
 	}
 
-	// Store
 	if err := s.storage.CreateUser(ctx, user); err != nil {
 		if err == domain.ErrEmailAlreadyExists || err == domain.ErrPhoneAlreadyExists {
 			return nil, status.Error(codes.AlreadyExists, err.Error())
@@ -54,7 +50,7 @@ func (s *UserServiceServer) CreateUser(ctx context.Context, req *pb.CreateUserRe
 		return nil, status.Error(codes.Internal, "failed to create user")
 	}
 
-	slog.Info("User created successfully", "user_id", user.ID.String())
+	slog.Info("User created successfully", "user_id", user.ID)
 
 	return &pb.CreateUserResponse{
 		User: domainUserToProto(user),
@@ -65,12 +61,7 @@ func (s *UserServiceServer) CreateUser(ctx context.Context, req *pb.CreateUserRe
 func (s *UserServiceServer) GetUser(ctx context.Context, req *pb.GetUserRequest) (*pb.GetUserResponse, error) {
 	slog.Info("Getting user", "id", req.Id)
 
-	id, err := uuid.Parse(req.Id)
-	if err != nil {
-		return nil, status.Error(codes.InvalidArgument, "invalid user ID format")
-	}
-
-	user, err := s.storage.GetUserByID(ctx, id)
+	user, err := s.storage.GetUserByID(ctx, req.Id)
 	if err != nil {
 		if err == domain.ErrUserNotFound {
 			return nil, status.Error(codes.NotFound, "user not found")
@@ -88,13 +79,7 @@ func (s *UserServiceServer) GetUser(ctx context.Context, req *pb.GetUserRequest)
 func (s *UserServiceServer) UpdateUser(ctx context.Context, req *pb.UpdateUserRequest) (*pb.UpdateUserResponse, error) {
 	slog.Info("Updating user", "id", req.Id)
 
-	id, err := uuid.Parse(req.Id)
-	if err != nil {
-		return nil, status.Error(codes.InvalidArgument, "invalid user ID format")
-	}
-
-	// Get existing user
-	user, err := s.storage.GetUserByID(ctx, id)
+	user, err := s.storage.GetUserByID(ctx, req.Id)
 	if err != nil {
 		if err == domain.ErrUserNotFound {
 			return nil, status.Error(codes.NotFound, "user not found")
@@ -102,21 +87,18 @@ func (s *UserServiceServer) UpdateUser(ctx context.Context, req *pb.UpdateUserRe
 		return nil, status.Error(codes.Internal, "failed to get user")
 	}
 
-	// Update fields
 	user.Update(req.FirstName, req.LastName, req.Gender, req.DateOfBirth.AsTime())
 
-	// Validate
 	if err := user.Validate(); err != nil {
 		return nil, status.Error(codes.InvalidArgument, err.Error())
 	}
 
-	// Save
 	if err := s.storage.UpdateUser(ctx, user); err != nil {
 		slog.Error("Failed to update user", "error", err)
 		return nil, status.Error(codes.Internal, "failed to update user")
 	}
 
-	slog.Info("User updated successfully", "user_id", user.ID.String())
+	slog.Info("User updated successfully", "user_id", user.ID)
 
 	return &pb.UpdateUserResponse{
 		User: domainUserToProto(user),
@@ -127,12 +109,7 @@ func (s *UserServiceServer) UpdateUser(ctx context.Context, req *pb.UpdateUserRe
 func (s *UserServiceServer) DeleteUser(ctx context.Context, req *pb.DeleteUserRequest) (*emptypb.Empty, error) {
 	slog.Info("Deleting user", "id", req.Id)
 
-	id, err := uuid.Parse(req.Id)
-	if err != nil {
-		return nil, status.Error(codes.InvalidArgument, "invalid user ID format")
-	}
-
-	if err := s.storage.DeleteUser(ctx, id); err != nil {
+	if err := s.storage.DeleteUser(ctx, req.Id); err != nil {
 		if err == domain.ErrUserNotFound {
 			return nil, status.Error(codes.NotFound, "user not found")
 		}
@@ -140,7 +117,7 @@ func (s *UserServiceServer) DeleteUser(ctx context.Context, req *pb.DeleteUserRe
 		return nil, status.Error(codes.Internal, "failed to delete user")
 	}
 
-	slog.Info("User deleted successfully", "user_id", id.String())
+	slog.Info("User deleted successfully", "user_id", req.Id)
 
 	return &emptypb.Empty{}, nil
 }
@@ -149,12 +126,7 @@ func (s *UserServiceServer) DeleteUser(ctx context.Context, req *pb.DeleteUserRe
 func (s *UserServiceServer) BlockUser(ctx context.Context, req *pb.BlockUserRequest) (*pb.BlockUserResponse, error) {
 	slog.Info("Blocking user", "id", req.Id)
 
-	id, err := uuid.Parse(req.Id)
-	if err != nil {
-		return nil, status.Error(codes.InvalidArgument, "invalid user ID format")
-	}
-
-	user, err := s.storage.GetUserByID(ctx, id)
+	user, err := s.storage.GetUserByID(ctx, req.Id)
 	if err != nil {
 		if err == domain.ErrUserNotFound {
 			return nil, status.Error(codes.NotFound, "user not found")
@@ -173,7 +145,7 @@ func (s *UserServiceServer) BlockUser(ctx context.Context, req *pb.BlockUserRequ
 		return nil, status.Error(codes.Internal, "failed to block user")
 	}
 
-	slog.Info("User blocked successfully", "user_id", user.ID.String())
+	slog.Info("User blocked successfully", "user_id", user.ID)
 
 	return &pb.BlockUserResponse{
 		User: domainUserToProto(user),
@@ -184,12 +156,7 @@ func (s *UserServiceServer) BlockUser(ctx context.Context, req *pb.BlockUserRequ
 func (s *UserServiceServer) UnblockUser(ctx context.Context, req *pb.UnblockUserRequest) (*pb.UnblockUserResponse, error) {
 	slog.Info("Unblocking user", "id", req.Id)
 
-	id, err := uuid.Parse(req.Id)
-	if err != nil {
-		return nil, status.Error(codes.InvalidArgument, "invalid user ID format")
-	}
-
-	user, err := s.storage.GetUserByID(ctx, id)
+	user, err := s.storage.GetUserByID(ctx, req.Id)
 	if err != nil {
 		if err == domain.ErrUserNotFound {
 			return nil, status.Error(codes.NotFound, "user not found")
@@ -208,7 +175,7 @@ func (s *UserServiceServer) UnblockUser(ctx context.Context, req *pb.UnblockUser
 		return nil, status.Error(codes.Internal, "failed to unblock user")
 	}
 
-	slog.Info("User unblocked successfully", "user_id", user.ID.String())
+	slog.Info("User unblocked successfully", "user_id", user.ID)
 
 	return &pb.UnblockUserResponse{
 		User: domainUserToProto(user),
@@ -219,12 +186,7 @@ func (s *UserServiceServer) UnblockUser(ctx context.Context, req *pb.UnblockUser
 func (s *UserServiceServer) UpdateUserContact(ctx context.Context, req *pb.UpdateUserContactRequest) (*pb.UpdateUserContactResponse, error) {
 	slog.Info("Updating user contact", "id", req.Id)
 
-	id, err := uuid.Parse(req.Id)
-	if err != nil {
-		return nil, status.Error(codes.InvalidArgument, "invalid user ID format")
-	}
-
-	user, err := s.storage.GetUserByID(ctx, id)
+	user, err := s.storage.GetUserByID(ctx, req.Id)
 	if err != nil {
 		if err == domain.ErrUserNotFound {
 			return nil, status.Error(codes.NotFound, "user not found")
@@ -232,7 +194,6 @@ func (s *UserServiceServer) UpdateUserContact(ctx context.Context, req *pb.Updat
 		return nil, status.Error(codes.Internal, "failed to get user")
 	}
 
-	// Update contact info
 	var phone, email *string
 	if req.PhoneNumber != nil {
 		phone = req.PhoneNumber
@@ -248,7 +209,7 @@ func (s *UserServiceServer) UpdateUserContact(ctx context.Context, req *pb.Updat
 		return nil, status.Error(codes.Internal, "failed to update user contact")
 	}
 
-	slog.Info("User contact updated successfully", "user_id", user.ID.String())
+	slog.Info("User contact updated successfully", "user_id", user.ID)
 
 	return &pb.UpdateUserContactResponse{
 		User: domainUserToProto(user),
@@ -297,10 +258,10 @@ func (s *UserServiceServer) ListUsers(ctx context.Context, req *pb.ListUsersRequ
 
 	pageSize := int(req.PageSize)
 	if pageSize <= 0 {
-		pageSize = 10 // default
+		pageSize = 10
 	}
 	if pageSize > 100 {
-		pageSize = 100 // max
+		pageSize = 100
 	}
 
 	users, nextToken, err := s.storage.ListUsers(ctx, pageSize, req.PageToken)
@@ -324,7 +285,7 @@ func (s *UserServiceServer) ListUsers(ctx context.Context, req *pb.ListUsersRequ
 // Helper function to convert domain user to proto
 func domainUserToProto(user *domain.User) *pb.User {
 	return &pb.User{
-		Id:          user.ID.String(),
+		Id:          user.ID,
 		FirstName:   user.FirstName,
 		LastName:    user.LastName,
 		Gender:      user.Gender,

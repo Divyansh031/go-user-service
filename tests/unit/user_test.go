@@ -13,7 +13,7 @@ func TestNewUser(t *testing.T) {
 	user := domain.NewUser("John", "Doe", "male", dob, "+1234567890", "john@example.com")
 
 	assert.NotNil(t, user)
-	assert.NotEqual(t, "", user.ID.String())
+	assert.NotEqual(t, "", user.ID)
 	assert.Equal(t, "John", user.FirstName)
 	assert.Equal(t, "Doe", user.LastName)
 	assert.Equal(t, "male", user.Gender)

@@ -8,7 +8,7 @@ import (
 
 // User represents a user in the domain
 type User struct {
-	ID          uuid.UUID
+	ID          string
 	FirstName   string
 	LastName    string
 	Gender      string
@@ -24,7 +24,7 @@ type User struct {
 func NewUser(firstName, lastName, gender string, dob time.Time, phone, email string) *User {
 	now := time.Now()
 	return &User{
-		ID:          uuid.New(),
+		ID:          uuid.New().String(),
 		FirstName:   firstName,
 		LastName:    lastName,
 		Gender:      gender,

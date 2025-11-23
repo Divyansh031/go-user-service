@@ -12,14 +12,21 @@ help:
 
 proto:
 	@echo "Generating protobuf code..."
-	protoc -I. \
-		-I$(shell go list -m -f "{{.Dir}}" google.golang.org/genproto)/googleapis \
+	@if [ ! -d "googleapis" ]; then \
+		echo "Downloading googleapis..."; \
+		rm -rf googleapis; \
+		git clone --depth 1 https://github.com/googleapis/googleapis.git; \
+	fi
+	protoc \
+		-I. \
+		-I./googleapis \
 		-I./api/proto \
 		--go_out=. --go_opt=paths=source_relative \
 		--go-grpc_out=. --go-grpc_opt=paths=source_relative \
 		--grpc-gateway_out=. --grpc-gateway_opt=paths=source_relative \
 		--grpc-gateway_opt=generate_unbound_methods=true \
 		api/proto/user/v1/*.proto
+	@echo "Protobuf code generated successfully!"
 
 build: proto
 	@echo "Building application..."
@@ -44,7 +51,7 @@ benchmark:
 docker-up:
 	@echo "Starting Docker containers..."
 	docker-compose up -d
-	@echo "Waiting for ScyllaDB to be healthy..."
+	@echo "Waiting for ScyllaDB to be healthy...Please wait a minute."
 	@until docker exec user-service-scylla cqlsh -u cassandra -p cassandra -e "describe keyspaces" >/dev/null 2>&1; do \
 		echo "ScyllaDB not ready yet, waiting 5 seconds..."; \
 		sleep 5; \

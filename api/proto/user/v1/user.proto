@@ -11,64 +11,64 @@ option go_package = "github.com/Divyansh031/user-service/api/proto/user/v1;userv
 service UserService {
   rpc CreateUser(CreateUserRequest) returns (CreateUserResponse) {
     option (google.api.http) = {
-      post: "/api/v1/users"
+      post: "/v1/users"
       body: "*"
     };
   }
   
   rpc GetUser(GetUserRequest) returns (GetUserResponse) {
     option (google.api.http) = {
-      get: "/api/v1/users/{id}"
+      get: "/v1/users/{id}"
     };
   }
   
   rpc UpdateUser(UpdateUserRequest) returns (UpdateUserResponse) {
     option (google.api.http) = {
-      put: "/api/v1/users/{id}"
+      put: "/v1/users/{id}"
       body: "*"
     };
   }
   
   rpc DeleteUser(DeleteUserRequest) returns (google.protobuf.Empty) {
     option (google.api.http) = {
-      delete: "/api/v1/users/{id}"
+      delete: "/v1/users/{id}"
     };
   }
   
   rpc BlockUser(BlockUserRequest) returns (BlockUserResponse) {
     option (google.api.http) = {
-      post: "/api/v1/users/{id}/block"
+      post: "/v1/users/{id}/block"
     };
   }
   
   rpc UnblockUser(UnblockUserRequest) returns (UnblockUserResponse) {
     option (google.api.http) = {
-      post: "/api/v1/users/{id}/unblock"
+      post: "/v1/users/{id}/unblock"
     };
   }
   
   rpc UpdateUserContact(UpdateUserContactRequest) returns (UpdateUserContactResponse) {
     option (google.api.http) = {
-      patch: "/api/v1/users/{id}/contact"
+      patch: "/v1/users/{id}/contact"
       body: "*"
     };
   }
   
   rpc GetUserByPhone(GetUserByPhoneRequest) returns (GetUserResponse) {
     option (google.api.http) = {
-      get: "/api/v1/users/phone/{phone_number}"
+      get: "/v1/users/phone/{phone_number}"
     };
   }
   
   rpc GetUserByEmail(GetUserByEmailRequest) returns (GetUserResponse) {
     option (google.api.http) = {
-      get: "/api/v1/users/email/{email}"
+      get: "/v1/users/email/{email}"
     };
   }
   
   rpc ListUsers(ListUsersRequest) returns (ListUsersResponse) {
     option (google.api.http) = {
-      get: "/api/v1/users"
+      get: "/v1/users"
     };
   }
 }
